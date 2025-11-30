@@ -3,12 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FileText, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 
-// Whitelist of allowed email addresses
-const ALLOWED_EMAILS = [
-    'petes-tech@proton.me',
-    'peterejeh09@gmail.com',
-    'peterejeh09@yahoo.com'
-];
+// Whitelist of allowed email addresses from environment variable
+const ALLOWED_EMAILS = import.meta.env.VITE_ALLOWED_EMAILS
+    ? import.meta.env.VITE_ALLOWED_EMAILS.split(',').map(email => email.trim())
+    : [];
 
 export default function Signup() {
     const navigate = useNavigate();
