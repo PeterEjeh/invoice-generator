@@ -22,8 +22,8 @@ export default function Dashboard() {
 
     // Filter invoices
     const filteredInvoices = invoices.filter(invoice => {
-        const matchesSearch = invoice.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            invoice.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = invoice.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
         const status = getPaymentStatus(invoice);
         const matchesFilter = filterStatus === 'all' || status === filterStatus;
         return matchesSearch && matchesFilter;
@@ -156,10 +156,10 @@ export default function Dashboard() {
                             ) : (
                                 filteredInvoices.map((invoice) => (
                                     <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="py-3 px-4 font-medium text-gray-900">{invoice.invoice_number}</td>
-                                        <td className="py-3 px-4 text-gray-700">{invoice.client_name}</td>
-                                        <td className="py-3 px-4 text-gray-600 text-sm">{formatDate(invoice.created_at)}</td>
-                                        <td className="py-3 px-4 text-gray-600 text-sm">{formatDate(invoice.due_date)}</td>
+                                        <td className="py-3 px-4 font-medium text-gray-900">{invoice.invoiceNumber}</td>
+                                        <td className="py-3 px-4 text-gray-700">{invoice.clientName}</td>
+                                        <td className="py-3 px-4 text-gray-600 text-sm">{formatDate(invoice.createdAt)}</td>
+                                        <td className="py-3 px-4 text-gray-600 text-sm">{formatDate(invoice.dueDate)}</td>
                                         <td className="py-3 px-4 text-right font-semibold text-gray-900">
                                             {formatCurrency(invoice.total)}
                                         </td>
