@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Home, Plus, Settings as SettingsIcon, LogOut, User } from 'lucide-react';
+import { FileText, Home, Plus, Settings as SettingsIcon, LogOut, User, Users, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
@@ -20,6 +20,8 @@ export default function Layout() {
     const navItems = [
         { path: '/', icon: Home, label: 'Dashboard' },
         { path: '/create', icon: Plus, label: 'New Invoice' },
+        { path: '/clients', icon: Users, label: 'Clients' },
+        { path: '/products', icon: Package, label: 'Products' },
         { path: '/settings', icon: SettingsIcon, label: 'Settings' },
     ];
 
@@ -48,8 +50,8 @@ export default function Layout() {
                                     <Link
                                         to={item.path}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active
-                                                ? 'bg-blue-50 text-blue-600 font-semibold'
-                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-blue-50 text-blue-600 font-semibold'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                             }`}
                                     >
                                         <Icon className="w-5 h-5" />

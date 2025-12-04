@@ -5,6 +5,8 @@ import { Download, Printer, Edit, ArrowLeft } from 'lucide-react';
 import ModernTemplate from '../components/templates/ModernTemplate';
 import ClassicTemplate from '../components/templates/ClassicTemplate';
 import MinimalTemplate from '../components/templates/MinimalTemplate';
+import BoldTemplate from '../components/templates/BoldTemplate';
+import ElegantTemplate from '../components/templates/ElegantTemplate';
 import PaymentStatusBadge from '../components/PaymentStatusBadge';
 import { exportToPDF, printInvoice } from '../utils/pdfExport';
 import { getPaymentStatus } from '../utils/invoiceCalculations';
@@ -57,7 +59,9 @@ export default function ViewInvoice() {
     const TemplateComponent = {
         modern: ModernTemplate,
         classic: ClassicTemplate,
-        minimal: MinimalTemplate
+        minimal: MinimalTemplate,
+        bold: BoldTemplate,
+        elegant: ElegantTemplate
     }[invoice.template] || ModernTemplate;
 
     const status = getPaymentStatus(invoice);

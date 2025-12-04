@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
-import { Plus, Trash2, Save } from 'lucide-react';
-import { calculateSubtotal, calculateDueDate, formatDate } from '../utils/invoiceCalculations';
+import { useClient } from '../context/ClientContext';
+import { useProduct } from '../context/ProductContext';
+import { Plus, Trash2, Save, User } from 'lucide-react';
+import { calculateSubtotal, calculateDueDate, formatDate, calculateTotal, calculateDiscount, formatCurrency } from '../utils/invoiceCalculations';
 
 export default function EditInvoice() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { getInvoice, updateInvoice } = useInvoice();
+    const { clients } = useClient();
+    const { products } = useProduct();
     const invoice = getInvoice(id);
 
     const [formData, setFormData] = useState({
@@ -19,6 +23,8 @@ export default function EditInvoice() {
         notes: '',
         template: 'modern',
         status: 'pending',
+        discountType: 'none',
+        discountValue: 0,
         items: [
             { description: '', quantity: 1, rate: 0 }
         ]
@@ -35,6 +41,8 @@ export default function EditInvoice() {
                 notes: invoice.notes || '',
                 template: invoice.template || 'modern',
                 status: invoice.status || 'pending',
+                discountType: invoice.discountType || 'none',
+                discountValue: invoice.discountValue || 0,
                 items: invoice.items || [{ description: '', quantity: 1, rate: 0 }]
             });
         }
@@ -59,10 +67,40 @@ export default function EditInvoice() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleClientSelect = (e) => {
+        const clientId = e.target.value;
+        if (!clientId) return;
+
+        const client = clients.find(c => c.id === clientId);
+        if (client) {
+            setFormData(prev => ({
+                ...prev,
+                clientName: client.name,
+                clientEmail: client.email || '',
+                clientPhone: client.phone || '',
+                clientAddress: client.address || ''
+            }));
+        }
+    };
+
     const handleItemChange = (index, field, value) => {
         const newItems = [...formData.items];
         newItems[index][field] = value;
         setFormData(prev => ({ ...prev, items: newItems }));
+    };
+
+    const handleProductSelect = (index, productId) => {
+        if (!productId) return;
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            const newItems = [...formData.items];
+            newItems[index] = {
+                ...newItems[index],
+                description: product.name + (product.description ? ` - ${product.description}` : ''),
+                rate: product.rate
+            };
+            setFormData(prev => ({ ...prev, items: newItems }));
+        }
     };
 
     const addItem = () => {
@@ -96,8 +134,8 @@ export default function EditInvoice() {
         }
 
         try {
-            // Calculate total
-            const total = calculateSubtotal(formData.items);
+            // Calculate total with discount
+            const total = calculateTotal(formData.items, formData.discountType, formData.discountValue);
 
             // Update invoice
             await updateInvoice(id, {
@@ -112,7 +150,9 @@ export default function EditInvoice() {
         }
     };
 
-    const total = calculateSubtotal(formData.items);
+    const subtotal = calculateSubtotal(formData.items);
+    const discount = calculateDiscount(subtotal, formData.discountType, formData.discountValue);
+    const total = calculateTotal(formData.items, formData.discountType, formData.discountValue);
 
     return (
         <div className="p-8 max-w-5xl mx-auto">
@@ -138,7 +178,25 @@ export default function EditInvoice() {
 
                 {/* Client Information */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Client Information</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-900">Client Information</h2>
+
+                        {/* Client Selector */}
+                        <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-gray-500" />
+                            <select
+                                onChange={handleClientSelect}
+                                className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                defaultValue=""
+                            >
+                                <option value="" disabled>Auto-fill from Clients...</option>
+                                {clients.map(client => (
+                                    <option key={client.id} value={client.id}>{client.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -224,11 +282,23 @@ export default function EditInvoice() {
 
                     <div className="space-y-4">
                         {formData.items.map((item, index) => (
-                            <div key={index} className="grid grid-cols-12 gap-4 items-start p-4 bg-gray-50 rounded-lg">
+                            <div key={index} className="grid grid-cols-12 gap-4 items-start p-4 bg-gray-50 rounded-lg relative group">
                                 <div className="col-span-12 md:col-span-5">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Description
-                                    </label>
+                                    <div className="flex justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Description
+                                        </label>
+                                        <select
+                                            onChange={(e) => handleProductSelect(index, e.target.value)}
+                                            className="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 py-0 px-2"
+                                            defaultValue=""
+                                        >
+                                            <option value="" disabled>Select Product...</option>
+                                            {products.map(p => (
+                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                     <input
                                         type="text"
                                         value={item.description}
@@ -278,13 +348,66 @@ export default function EditInvoice() {
                         ))}
                     </div>
 
-                    {/* Total */}
+                    {/* Subtotal and Discount */}
                     <div className="mt-6 flex justify-end">
-                        <div className="w-64 bg-blue-50 p-4 rounded-lg">
-                            <div className="flex justify-between items-center">
-                                <span className="font-semibold text-gray-900">Total:</span>
+                        <div className="w-80 space-y-3">
+                            {/* Subtotal */}
+                            <div className="flex justify-between text-gray-700">
+                                <span>Subtotal:</span>
+                                <span className="font-medium">{formatCurrency(subtotal)}</span>
+                            </div>
+
+                            {/* Discount Section */}
+                            <div className="border-t pt-3">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Discount Type
+                                </label>
+                                <select
+                                    name="discountType"
+                                    value={formData.discountType}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                                >
+                                    <option value="none">No Discount</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount (₦)</option>
+                                </select>
+
+                                {formData.discountType !== 'none' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            {formData.discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount'}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="discountValue"
+                                            value={formData.discountValue}
+                                            onChange={handleInputChange}
+                                            min="0"
+                                            max={formData.discountType === 'percentage' ? '100' : subtotal}
+                                            step={formData.discountType === 'percentage' ? '0.1' : '0.01'}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder={formData.discountType === 'percentage' ? 'e.g., 10' : 'e.g., 5000'}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Discount Amount Display */}
+                            {formData.discountType !== 'none' && discount > 0 && (
+                                <div className="flex justify-between text-red-600">
+                                    <span>
+                                        Discount {formData.discountType === 'percentage' ? `(${formData.discountValue}%)` : ''}:
+                                    </span>
+                                    <span className="font-medium">-{formatCurrency(discount)}</span>
+                                </div>
+                            )}
+
+                            {/* Total */}
+                            <div className="flex justify-between items-center pt-3 border-t-2 border-gray-300">
+                                <span className="text-lg font-semibold text-gray-900">Total:</span>
                                 <span className="text-2xl font-bold text-blue-600">
-                                    ₦{total.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
+                                    {formatCurrency(total)}
                                 </span>
                             </div>
                         </div>
@@ -294,11 +417,11 @@ export default function EditInvoice() {
                 {/* Template Selection */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Invoice Template</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {['modern', 'classic', 'minimal'].map((template) => (
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        {['modern', 'classic', 'minimal', 'bold', 'elegant'].map((template) => (
                             <label
                                 key={template}
-                                className={`relative flex items-center justify-center p-6 border-2 rounded-lg cursor-pointer transition-all ${formData.template === template
+                                className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.template === template
                                     ? 'border-blue-600 bg-blue-50'
                                     : 'border-gray-300 hover:border-gray-400'
                                     }`}
@@ -311,11 +434,11 @@ export default function EditInvoice() {
                                     onChange={handleInputChange}
                                     className="sr-only"
                                 />
-                                <span className="text-lg font-medium capitalize text-gray-900">
+                                <span className="text-sm font-medium capitalize text-gray-900">
                                     {template}
                                 </span>
                                 {formData.template === template && (
-                                    <span className="absolute top-2 right-2 w-4 h-4 bg-blue-600 rounded-full"></span>
+                                    <span className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full"></span>
                                 )}
                             </label>
                         ))}
@@ -331,6 +454,7 @@ export default function EditInvoice() {
                         onChange={handleInputChange}
                         rows="4"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Payment terms, thank you message, or any other notes..."
                     ></textarea>
                 </div>
 

@@ -1,23 +1,21 @@
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 /**
- * Export invoice as PDF
- * @param {string} elementId - ID of the HTML element to convert to PDF
- * @param {string} filename - Name of the PDF file
+ * Export an element to PDF
+ * @param {string} elementId - The ID of the element to export
+ * @param {string} filename - The name of the PDF file
+ * @returns {Promise<boolean>} - Success status
  */
-export const exportToPDF = async (elementId, filename = 'invoice.pdf') => {
+export async function exportToPDF(elementId, filename) {
     try {
         const element = document.getElementById(elementId);
         if (!element) {
-            throw new Error('Element not found');
+            console.error(`Element with ID "${elementId}" not found`);
+            return false;
         }
 
-        // Hide print buttons before capturing
-        const printButtons = element.querySelectorAll('.print-hidden');
-        printButtons.forEach(btn => btn.style.display = 'none');
-
-        // Capture the element as canvas
+        // Use html2canvas to capture the element
         const canvas = await html2canvas(element, {
             scale: 2,
             useCORS: true,
@@ -25,30 +23,53 @@ export const exportToPDF = async (elementId, filename = 'invoice.pdf') => {
             backgroundColor: '#ffffff'
         });
 
-        // Show buttons again
-        printButtons.forEach(btn => btn.style.display = '');
-
-        // Calculate PDF dimensions
+        // Calculate dimensions for A4 page
         const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        // Create PDF
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgData = canvas.toDataURL('image/png');
+        let heightLeft = imgHeight;
+        let position = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        // Add first page
+        pdf.addImage(
+            canvas.toDataURL('image/png'),
+            'PNG',
+            0,
+            position,
+            imgWidth,
+            imgHeight
+        );
+        heightLeft -= pageHeight;
+
+        // Add additional pages if content is longer than one page
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(
+                canvas.toDataURL('image/png'),
+                'PNG',
+                0,
+                position,
+                imgWidth,
+                imgHeight
+            );
+            heightLeft -= pageHeight;
+        }
+
+        // Save the PDF
         pdf.save(filename);
-
         return true;
     } catch (error) {
         console.error('Error generating PDF:', error);
         return false;
     }
-};
+}
 
 /**
- * Print invoice
+ * Print the invoice using the browser's print dialog
  */
-export const printInvoice = () => {
+export function printInvoice() {
     window.print();
-};
+}

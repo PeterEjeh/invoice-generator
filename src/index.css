@@ -43,13 +43,13 @@
   background: #555;
 }
 
-/* Print Styles - Balanced for readability and single-page fit */
+/* Print Styles - A4 Pagination with Repeating Headers */
 @media print {
 
-  /* Remove browser default headers and footers */
+  /* A4 page setup with proper margins */
   @page {
-    margin: 0.5cm;
     size: A4;
+    margin: 1.5cm 1cm 1cm 1cm;
   }
 
   /* Reset body margins for print */
@@ -59,107 +59,97 @@
     background: white !important;
   }
 
-  /* Ensure invoice fits on one page with balanced scaling */
+  /* Allow natural pagination - remove aggressive scaling */
   #invoice-content {
-    page-break-inside: avoid;
-    page-break-after: avoid;
-    page-break-before: avoid;
-    transform: scale(0.88);
-    transform-origin: top center;
     width: 100%;
     max-width: 100%;
+    transform: none;
   }
 
-  /* Reduce font sizes moderately for print */
-  #invoice-content * {
-    font-size: 12px !important;
-    line-height: 1.4 !important;
+  /* Header that repeats on each page */
+  .print-header {
+    display: block;
   }
 
-  /* Specific size adjustments */
+  /* Prevent awkward breaks in table rows */
+  .print-no-break,
+  #invoice-content tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Keep section headers with their content */
+  #invoice-content h3,
+  #invoice-content h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Optimize font sizes for readability on A4 */
   #invoice-content h1 {
-    font-size: 24px !important;
-    margin-bottom: 8px !important;
+    font-size: 22px !important;
   }
 
   #invoice-content h2 {
     font-size: 18px !important;
-    margin-bottom: 8px !important;
   }
 
   #invoice-content h3 {
     font-size: 14px !important;
+  }
+
+  #invoice-content p,
+  #invoice-content td,
+  #invoice-content th {
+    font-size: 11px !important;
+  }
+
+  /* Reduce excessive padding for print */
+  #invoice-content .p-16 {
+    padding: 12px !important;
+  }
+
+  #invoice-content .p-12 {
+    padding: 10px !important;
+  }
+
+  #invoice-content .p-8 {
+    padding: 8px !important;
+  }
+
+  #invoice-content .p-6 {
+    padding: 6px !important;
+  }
+
+  /* Reduce margins */
+  #invoice-content .mb-16 {
+    margin-bottom: 12px !important;
+  }
+
+  #invoice-content .mb-12 {
+    margin-bottom: 10px !important;
+  }
+
+  #invoice-content .mb-8 {
+    margin-bottom: 8px !important;
+  }
+
+  #invoice-content .mb-6 {
     margin-bottom: 6px !important;
   }
 
-  #invoice-content p {
-    font-size: 11px !important;
+  #invoice-content .mb-4 {
     margin-bottom: 4px !important;
   }
 
+  /* Table spacing */
   #invoice-content table {
-    font-size: 11px !important;
+    width: 100%;
   }
 
   #invoice-content th,
   #invoice-content td {
-    padding: 6px !important;
-    font-size: 11px !important;
-  }
-
-  /* Moderate padding and margins */
-  #invoice-content>div {
-    padding: 16px !important;
-  }
-
-  #invoice-content .p-8 {
-    padding: 16px !important;
-  }
-
-  #invoice-content .p-6 {
-    padding: 12px !important;
-  }
-
-  #invoice-content .mb-4 {
-    margin-bottom: 10px !important;
-  }
-
-  #invoice-content .mb-6 {
-    margin-bottom: 12px !important;
-  }
-
-  #invoice-content .mb-8 {
-    margin-bottom: 14px !important;
-  }
-
-  #invoice-content .mt-4 {
-    margin-top: 10px !important;
-  }
-
-  #invoice-content .mt-6 {
-    margin-top: 12px !important;
-  }
-
-  #invoice-content .mt-8 {
-    margin-top: 14px !important;
-  }
-
-  /* Make client name (Bill To) bold and bigger */
-  #invoice-content .font-semibold.text-lg {
-    font-size: 16px !important;
-    font-weight: 800 !important;
-  }
-
-  /* Make Total Due amount bold and bigger */
-  #invoice-content .text-2xl {
-    font-size: 20px !important;
-    font-weight: 800 !important;
-  }
-
-  /* Make "TOTAL" label bold */
-  #invoice-content .text-lg.font-bold {
-    font-size: 15px !important;
-    font-weight: 800 !important;
+    padding: 6px 8px !important;
   }
 
   /* Hide all unnecessary elements */
@@ -171,7 +161,7 @@
     display: none !important;
   }
 
-  /* Optimize spacing for print */
+  /* Preserve colors and backgrounds */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

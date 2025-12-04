@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatDate } from '../../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDiscount } from '../../utils/invoiceCalculations';
 
 export default function MinimalTemplate({ invoice, settings }) {
     return (
@@ -57,7 +58,7 @@ export default function MinimalTemplate({ invoice, settings }) {
                     </thead>
                     <tbody>
                         {invoice.items?.map((item, index) => (
-                            <tr key={index} className="border-b border-gray-100">
+                            <tr key={index} className="border-b border-gray-100 print-no-break">
                                 <td className="py-4 text-sm text-gray-900">{item.description}</td>
                                 <td className="text-center py-4 text-sm text-gray-600">{item.quantity}</td>
                                 <td className="text-right py-4 text-sm text-gray-600">{formatCurrency(item.rate)}</td>
@@ -69,9 +70,28 @@ export default function MinimalTemplate({ invoice, settings }) {
                     </tbody>
                 </table>
 
-                {/* Total */}
+                {/* Total Section */}
                 <div className="mt-6 flex justify-end">
-                    <div className="w-64">
+                    <div className="w-64 space-y-2">
+                        {/* Subtotal */}
+                        <div className="flex justify-between text-gray-700">
+                            <span className="text-sm">Subtotal:</span>
+                            <span className="font-medium">{formatCurrency(calculateSubtotal(invoice.items))}</span>
+                        </div>
+
+                        {/* Discount */}
+                        {invoice.discountType && invoice.discountType !== 'none' && (
+                            <div className="flex justify-between text-red-600">
+                                <span className="text-sm">
+                                    Discount {invoice.discountType === 'percentage' ? `(${invoice.discountValue}%)` : ''}:
+                                </span>
+                                <span className="font-medium">
+                                    -{formatCurrency(calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Total */}
                         <div className="flex justify-between items-center py-3 border-t border-gray-900">
                             <span className="text-sm font-medium text-gray-900">Total</span>
                             <span className="text-2xl font-light text-gray-900">{formatCurrency(invoice.total)}</span>

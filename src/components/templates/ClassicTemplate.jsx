@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatDate } from '../../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDiscount } from '../../utils/invoiceCalculations';
 
 export default function ClassicTemplate({ invoice, settings }) {
     return (
@@ -54,7 +55,7 @@ export default function ClassicTemplate({ invoice, settings }) {
                     </thead>
                     <tbody>
                         {invoice.items?.map((item, index) => (
-                            <tr key={index} className="border-b border-gray-300">
+                            <tr key={index} className="border-b border-gray-300 print-no-break">
                                 <td className="py-3 px-4">{item.description}</td>
                                 <td className="text-center py-3 px-4">{item.quantity}</td>
                                 <td className="text-right py-3 px-4">{formatCurrency(item.rate)}</td>
@@ -66,12 +67,33 @@ export default function ClassicTemplate({ invoice, settings }) {
                     </tbody>
                 </table>
 
-                {/* Total */}
+                {/* Total Section */}
                 <div className="mt-4 flex justify-end">
-                    <div className="w-64 bg-gray-800 text-white p-4">
-                        <div className="flex justify-between items-center">
-                            <span className="font-bold text-lg">TOTAL DUE:</span>
-                            <span className="text-2xl font-bold">{formatCurrency(invoice.total)}</span>
+                    <div className="w-64 space-y-2">
+                        {/* Subtotal */}
+                        <div className="flex justify-between text-gray-700 text-sm">
+                            <span>Subtotal:</span>
+                            <span className="font-medium">{formatCurrency(calculateSubtotal(invoice.items))}</span>
+                        </div>
+
+                        {/* Discount */}
+                        {invoice.discountType && invoice.discountType !== 'none' && (
+                            <div className="flex justify-between text-red-600 text-sm">
+                                <span>
+                                    Discount {invoice.discountType === 'percentage' ? `(${invoice.discountValue}%)` : ''}:
+                                </span>
+                                <span className="font-medium">
+                                    -{formatCurrency(calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Total */}
+                        <div className="bg-gray-800 text-white p-4">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-lg">TOTAL DUE:</span>
+                                <span className="text-2xl font-bold">{formatCurrency(invoice.total)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

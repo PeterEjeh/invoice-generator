@@ -17,9 +17,26 @@ export const calculateSubtotal = (items) => {
     }, 0);
 };
 
-// Calculate total (currently same as subtotal since no tax)
-export const calculateTotal = (items) => {
-    return calculateSubtotal(items);
+// Calculate discount amount
+export const calculateDiscount = (subtotal, discountType, discountValue) => {
+    if (!discountType || discountType === 'none') return 0;
+
+    const value = Number(discountValue) || 0;
+
+    if (discountType === 'percentage') {
+        return (subtotal * value) / 100;
+    } else if (discountType === 'fixed') {
+        return Math.min(value, subtotal); // Don't allow discount greater than subtotal
+    }
+
+    return 0;
+};
+
+// Calculate total after discount
+export const calculateTotal = (items, discountType = 'none', discountValue = 0) => {
+    const subtotal = calculateSubtotal(items);
+    const discount = calculateDiscount(subtotal, discountType, discountValue);
+    return subtotal - discount;
 };
 
 // Generate invoice number
