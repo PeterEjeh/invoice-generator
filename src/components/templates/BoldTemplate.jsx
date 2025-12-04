@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatDate } from '../../utils/invoiceCalculations';
-import { calculateSubtotal, calculateDiscount } from '../../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDiscount, calculateVAT } from '../../utils/invoiceCalculations';
 
 export default function BoldTemplate({ invoice, settings }) {
     const primaryColor = settings?.primaryColor || '#000000';
@@ -159,6 +159,19 @@ export default function BoldTemplate({ invoice, settings }) {
                                     </span>
                                     <span className="font-bold">
                                         -{formatCurrency(calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue))}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* VAT */}
+                            {invoice.vat && invoice.vat > 0 && (
+                                <div className="flex justify-between text-gray-700">
+                                    <span>VAT ({invoice.vat}%):</span>
+                                    <span className="font-bold">
+                                        {formatCurrency(calculateVAT(
+                                            calculateSubtotal(invoice.items) - calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue),
+                                            invoice.vat
+                                        ))}
                                     </span>
                                 </div>
                             )}

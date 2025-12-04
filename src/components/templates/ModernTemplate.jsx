@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileText, Mail, Phone, Building, Calendar } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/invoiceCalculations';
-import { calculateSubtotal, calculateDiscount } from '../../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDiscount, calculateVAT } from '../../utils/invoiceCalculations';
 
 export default function ModernTemplate({ invoice, settings }) {
     return (
@@ -110,6 +110,19 @@ export default function ModernTemplate({ invoice, settings }) {
                                 </span>
                                 <span className="font-medium">
                                     -{formatCurrency(calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* VAT */}
+                        {invoice.vat && invoice.vat > 0 && (
+                            <div className="flex justify-between text-gray-700">
+                                <span>VAT ({invoice.vat}%):</span>
+                                <span className="font-medium">
+                                    {formatCurrency(calculateVAT(
+                                        calculateSubtotal(invoice.items) - calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue),
+                                        invoice.vat
+                                    ))}
                                 </span>
                             </div>
                         )}

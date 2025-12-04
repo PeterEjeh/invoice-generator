@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatDate } from '../../utils/invoiceCalculations';
-import { calculateSubtotal, calculateDiscount } from '../../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDiscount, calculateVAT } from '../../utils/invoiceCalculations';
 
 export default function ElegantTemplate({ invoice, settings }) {
     const primaryColor = settings?.primaryColor || '#000000';
@@ -107,6 +107,19 @@ export default function ElegantTemplate({ invoice, settings }) {
                             </span>
                             <span className="font-medium">
                                 -{formatCurrency(calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue))}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* VAT */}
+                    {invoice.vat && invoice.vat > 0 && (
+                        <div className="flex justify-between text-gray-600">
+                            <span className="text-sm uppercase tracking-widest">VAT ({invoice.vat}%)</span>
+                            <span className="font-medium">
+                                {formatCurrency(calculateVAT(
+                                    calculateSubtotal(invoice.items) - calculateDiscount(calculateSubtotal(invoice.items), invoice.discountType, invoice.discountValue),
+                                    invoice.vat
+                                ))}
                             </span>
                         </div>
                     )}

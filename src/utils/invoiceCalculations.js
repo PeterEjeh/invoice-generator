@@ -32,11 +32,19 @@ export const calculateDiscount = (subtotal, discountType, discountValue) => {
     return 0;
 };
 
-// Calculate total after discount
-export const calculateTotal = (items, discountType = 'none', discountValue = 0) => {
+// Calculate VAT amount
+export const calculateVAT = (amount, vatPercentage = 0) => {
+    const vat = Number(vatPercentage) || 0;
+    return (amount * vat) / 100;
+};
+
+// Calculate total after discount and VAT
+export const calculateTotal = (items, discountType = 'none', discountValue = 0, vatPercentage = 0) => {
     const subtotal = calculateSubtotal(items);
     const discount = calculateDiscount(subtotal, discountType, discountValue);
-    return subtotal - discount;
+    const afterDiscount = subtotal - discount;
+    const vat = calculateVAT(afterDiscount, vatPercentage);
+    return afterDiscount + vat;
 };
 
 // Generate invoice number

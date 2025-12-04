@@ -4,7 +4,7 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useClient } from '../context/ClientContext';
 import { useProduct } from '../context/ProductContext';
 import { Plus, Trash2, Save, User, Package, CheckSquare, Square } from 'lucide-react';
-import { calculateSubtotal, calculateDueDate, formatDate, calculateTotal, calculateDiscount, formatCurrency } from '../utils/invoiceCalculations';
+import { calculateSubtotal, calculateDueDate, formatDate, calculateTotal, calculateDiscount, calculateVAT, formatCurrency } from '../utils/invoiceCalculations';
 
 export default function CreateInvoice() {
     const navigate = useNavigate();
@@ -22,6 +22,7 @@ export default function CreateInvoice() {
         template: 'modern',
         discountType: 'none',
         discountValue: 0,
+        vat: 0,
         items: [
             { description: '', quantity: 1, rate: 0 }
         ]
@@ -124,8 +125,8 @@ export default function CreateInvoice() {
                 });
             }
 
-            // Calculate total with discount
-            const total = calculateTotal(formData.items, formData.discountType, formData.discountValue);
+            // Calculate total with discount and VAT
+            const total = calculateTotal(formData.items, formData.discountType, formData.discountValue, formData.vat);
 
             // Create invoice
             const invoice = await createInvoice({
@@ -142,7 +143,9 @@ export default function CreateInvoice() {
 
     const subtotal = calculateSubtotal(formData.items);
     const discount = calculateDiscount(subtotal, formData.discountType, formData.discountValue);
-    const total = calculateTotal(formData.items, formData.discountType, formData.discountValue);
+    const afterDiscount = subtotal - discount;
+    const vatAmount = calculateVAT(afterDiscount, formData.vat);
+    const total = calculateTotal(formData.items, formData.discountType, formData.discountValue, formData.vat);
 
     return (
         <div className="p-8 max-w-5xl mx-auto">
@@ -398,6 +401,32 @@ export default function CreateInvoice() {
                                         Discount {formData.discountType === 'percentage' ? `(${formData.discountValue}%)` : ''}:
                                     </span>
                                     <span className="font-medium">-{formatCurrency(discount)}</span>
+                                </div>
+                            )}
+
+                            {/* VAT Section */}
+                            <div className="border-t pt-3">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    VAT (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    name="vat"
+                                    value={formData.vat}
+                                    onChange={handleInputChange}
+                                    min="0"
+                                    max="100"
+                                    step="0.1"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="e.g., 7.5"
+                                />
+                            </div>
+
+                            {/* VAT Amount Display */}
+                            {formData.vat > 0 && vatAmount > 0 && (
+                                <div className="flex justify-between text-gray-700">
+                                    <span>VAT ({formData.vat}%):</span>
+                                    <span className="font-medium">{formatCurrency(vatAmount)}</span>
                                 </div>
                             )}
 
