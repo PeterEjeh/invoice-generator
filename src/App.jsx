@@ -15,6 +15,7 @@ import Clients from './pages/Clients';
 import Products from './pages/Products';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import PdfViewer from './pages/PdfViewer';
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
                                 {/* Public routes */}
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/signup" element={<Signup />} />
+                                <Route path="/pdf/:filename" element={<PdfViewer />} />
 
                                 {/* Protected routes */}
                                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
